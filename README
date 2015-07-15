@@ -10,13 +10,13 @@ into this tree:
 
     git clone https://github.com/kees/physionet-hrv.git
     (cd physionet-hrv && git checkout fixes &&
-     CC="gcc -I../physionet-wfdb/build/include -L../physionet-wfdb/build/lib")
+     CC="gcc -I../physionet-wfdb/build/include -L../physionet-wfdb/build/lib" make)
 
 The RRs (in msec) can be fed into PhysioNet's hrv toolkit for analysis:
 
     for date in $(./rr-dump.py hrv.json | cut -d" " -f1); do
-        ./rr-dump.py hrv.json $i > rr.dat
-        echo -n $i" "
+        ./rr-dump.py hrv.json $date > rr.dat
+        echo -n $date" "
         (cd physionet-hrv; \
          LD_LIBRARY_PATH=../physionet-wfdb/build/lib \
          PATH=".:../physionet-wfdb/build/bin:$PATH" \
