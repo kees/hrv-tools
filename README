@@ -6,10 +6,11 @@ To analyze this with PhysioNet's hrv toolkit, fetch two more git trees
 into this tree:
 
     git clone https://github.com/kees/physionet-wfdb.git
-    (cd physionet-wfdb && ./configure && make)
+    (cd physionet-wfdb && git checkout fixes && ./configure && make)
 
     git clone https://github.com/kees/physionet-hrv.git
-    (cd physionet-hrv && git checkout fixes && make)
+    (cd physionet-hrv && git checkout fixes &&
+     CC="gcc -I../physionet-wfdb/build/include -L../physionet-wfdb/build/lib")
 
 The RRs (in msec) can be fed into PhysioNet's hrv toolkit for analysis:
 
@@ -22,7 +23,7 @@ The RRs (in msec) can be fed into PhysioNet's hrv toolkit for analysis:
          ./get_hrv -mMR ../rr.dat 2>/dev/null) | grep rMSSD
     done
 
-EliteHRV takes short reading, so be aware, quoting
+EliteHRV takes short readings, so be aware, quoting
 http://physionet.org/tutorials/hrv-toolkit/
 
     Although the long term (24-hour) statistics of SDANN, SDNNIDX and
