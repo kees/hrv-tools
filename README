@@ -1,0 +1,23 @@
+This script exports EliteHRV raw data to a .json file:
+
+    ./elitehrv-sync.py EMAIL PASSWORD hrv.json
+
+The RRs (in msec) can be fed into PhysioNet's hrv toolkit for analysis:
+
+    for date in $(./rr-dump.py hrv.json | cut -d" " -f1); do
+        ./rr-dump.py hrv.json $i > rr.dat
+        echo -n $i" "
+        (cd physionet-hrv; \
+         LD_LIBRARY_PATH=../physionet-wfdb/build/lib \
+         PATH=".:../physionet-wfdb/build/bin:$PATH" \
+         ./get_hrv -mMR ../rr.dat 2>/dev/null) | grep rMSSD
+    done
+
+EliteHRV takes short reading, so be aware, quoting http://physionet.org/tutorials/hrv-toolkit/
+
+    Although the long term (24-hour) statistics of SDANN, SDNNIDX and
+    ULF power can be calculated for shorter data lengths, they will
+    become increasingly unreliable. For short-term data (less than 15
+    minutes in length), only the time domain measures of AVNN, SDNN,
+    rMSSD and pNN50 and the frequency domain measures of total power,
+    VLF power, HF power and LF/HF ratio should be used.
