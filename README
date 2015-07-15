@@ -2,6 +2,15 @@ This script exports EliteHRV raw data to a .json file:
 
     ./elitehrv-sync.py EMAIL PASSWORD hrv.json
 
+To analyze this with PhysioNet's hrv toolkit, fetch two more git trees
+into this tree:
+
+    git clone https://github.com/kees/physionet-wfdb.git
+    (cd physionet-wfdb && ./configure && make)
+
+    git clone https://github.com/kees/physionet-hrv.git
+    (cd physionet-hrv && git checkout fixes && make)
+
 The RRs (in msec) can be fed into PhysioNet's hrv toolkit for analysis:
 
     for date in $(./rr-dump.py hrv.json | cut -d" " -f1); do
@@ -13,7 +22,8 @@ The RRs (in msec) can be fed into PhysioNet's hrv toolkit for analysis:
          ./get_hrv -mMR ../rr.dat 2>/dev/null) | grep rMSSD
     done
 
-EliteHRV takes short reading, so be aware, quoting http://physionet.org/tutorials/hrv-toolkit/
+EliteHRV takes short reading, so be aware, quoting
+http://physionet.org/tutorials/hrv-toolkit/
 
     Although the long term (24-hour) statistics of SDANN, SDNNIDX and
     ULF power can be calculated for shorter data lengths, they will
