@@ -7,10 +7,10 @@ import os, sys, requests
 import simplejson as json
 
 def fetch(url, headers, data):
-    r = requests.post(url, headers=headers, data=data)
-    response = r.content.decode("utf-8")
-    if r.status_code != 200:
-        print("%d %s" % (r.status_code, r.reason), file=sys.stderr)
+    req = requests.post(url, headers=headers, data=data)
+    response = req.content.decode("utf-8")
+    if req.status_code != 200:
+        print("%d %s" % (req.status_code, req.reason), file=sys.stderr)
         print(response, file=sys.stderr)
         sys.exit(1)
     try:
@@ -18,6 +18,10 @@ def fetch(url, headers, data):
     except:
         print(response, file=sys.stderr)
         raise
+    if 'login' in url and not decoded['isAuthenticated']:
+        print("Wrong username or password!")
+        print(response, file=sys.stderr)
+        sys.exit(1)
     return decoded
 
 def merge_list(key, master, latest, complain=False):
