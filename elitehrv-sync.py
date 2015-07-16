@@ -3,8 +3,7 @@
 # Sad that it's not over https, though it made traffic analysis easier! ;)
 # © 2015 Kees Cook <kees@ubuntu.com>
 # License: GPLv3
-import os, sys, requests
-import simplejson as json
+import os, sys, requests, json
 
 def fetch(url, headers, data):
     req = requests.post(url, headers=headers, data=data)
