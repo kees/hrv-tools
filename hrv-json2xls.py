@@ -9,6 +9,13 @@ wb = xlwt.Workbook()
 ws = wb.add_sheet('Measurements')
 
 elitehrv = json.load(open(sys.argv[1]))
+# Load an optional "events.txt" file containing date-indexed line of
+# text to include in the "Events" column:
+#   2015-07-10  Upped Crossfit from 2x/week to 3x/week
+if len(sys.argv) > 2:
+    events = dict(line.strip().split(None, 1) for line in open(sys.argv[2]))
+else:
+    events = dict()
 
 col = 0
 ws.write(0, col, "Date", style_bold); col += 1
@@ -20,7 +27,7 @@ ws.write(0, col, "Weight", style_bold); col += 1
 ws.write(0, col, "BMI", style_bold); col += 1
 ws.write(0, col, "HRV score", style_bold); col += 1
 ws.write(0, col, "HRV Pulse", style_bold); col += 1
-ws.write(0, col, "Notes", style_bold); col += 1
+ws.write(0, col, "Events", style_bold); col += 1
 
 bp_data = []
 weight_data = []
@@ -79,6 +86,8 @@ for entry in elitehrv['entries']:
     ws.write(row, col, bmi); col += 1
     ws.write(row, col, hrv_score); col += 1
     ws.write(row, col, hrv_hr); col += 1
+    if date in events:
+        ws.write(row, col, events[date]); col += 1
 
     row += 1
 
