@@ -76,6 +76,8 @@ except:
 if datafile:
     try:
         data = json.load(open(datafile))
+        count = len(data['entries'])
+        print("Loaded %d entr%s." % (count, "y" if count == 1 else "ies"), file=sys.stderr)
     except FileNotFoundError:
         data = dict()
 else:
@@ -129,4 +131,9 @@ print(json.dumps(data, sort_keys=True, indent=4), file=output)
 print("Wrote %d entr%s." % (count, "y" if count == 1 else "ies"), file=sys.stderr)
 
 if datafile:
-    os.rename("%s.new" % (datafile), datafile)
+    new = '%s.new' % (datafile)
+    old = '%s.old' % (datafile)
+    if os.path.exists(old):
+        os.unlink(old)
+    os.link(datafile, old)
+    os.rename(new, datafile)
