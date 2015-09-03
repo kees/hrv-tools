@@ -1,6 +1,11 @@
 This script exports EliteHRV raw data to a .json file:
 
-    ./elitehrv-sync.py EMAIL PASSWORD hrv.json
+    ./elitehrv-sync.py hrv.json
+
+Configure your username (email) and password in ~/.config/elitehrv.conf:
+
+    username=your-email@here
+    password=your-password-here
 
 To analyze this with PhysioNet's hrv toolkit, fetch two more git trees
 into this tree:

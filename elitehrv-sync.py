@@ -63,15 +63,23 @@ def merge(master, latest, complain=False):
             else:
                 master[key] = latest[key]
 
-try:
-    email = sys.argv[1]
-    password = sys.argv[2]
-    datafile = None
-    if len(sys.argv) > 3:
-        datafile = sys.argv[3]
-except:
-    print("Usage: %s EMAIL PASSWORD [DATA.json]\n", sys.argv[0])
-    sys.exit(1)
+conffile = open(os.path.expanduser("~/.config/elitehrv.conf"))
+for line in conffile:
+    line = line.strip()
+    name, value = line.split('=')
+    if name == "username":
+        email = value
+    elif name == "password":
+        password = value
+    else:
+        raise ValueError("Unknown configuration option '%s'" % (name))
+
+datafile = None
+if len(sys.argv) > 1:
+    if sys.argv[1] in ["-h", "--help"]:
+        print("Usage: %s [DATA.json]\n", sys.argv[0])
+        sys.exit(1)
+    datafile = sys.argv[1]
 
 if datafile:
     try:
