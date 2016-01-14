@@ -17,7 +17,7 @@ def fetch(url, headers, data):
     except:
         print(response, file=sys.stderr)
         raise
-    if 'login' in url and not decoded['isAuthenticated']:
+    if 'login' in url and not decoded.get('isAuthenticated',None):
         print("Wrong username or password!")
         print(response, file=sys.stderr)
         sys.exit(1)
@@ -26,20 +26,25 @@ def fetch(url, headers, data):
 def merge_list(key, master, latest, complain=False):
     # If a list is called "entries", the unique index is "entryId".
     # If a list is called "sleeps", the unique index is "sleepId".
-    index = key
-    index = index.replace('iesTo','yTo')
-    index = index.replace('sTo','To')
-    if index.endswith('ies'):
-        index = "%syId" % (index[:-3])
-    elif index.endswith('s'):
-        index = "%sId" % (index[:-1])
-    else:
-        print("How do I merge key '%s'?" % (key), file=sys.stderr)
-        sys.exit(1)
+    #index = key
+    #index = index.replace('iesTo','yTo')
+    #index = index.replace('sTo','To')
+    #if index.endswith('ies'):
+    #    index = "%syId" % (index[:-3])
+    #elif index.endswith('s'):
+    #    index = "%sId" % (index[:-1])
+    #else:
+    #    print("How do I merge key '%s'?" % (key), file=sys.stderr)
+    #    sys.exit(1)
+    index = 'id'
 
     # Find existing positions.
     ids = dict()
     for pos in range(len(master)):
+        if not master[pos].get(index,None):
+            raise ValueError("Missing index '%s' in '%s':\n%s" % (index,
+                             key, json.dumps(master[pos], sort_keys=True,
+                                             indent=4)))
         ids[master[pos][index]] = pos
     # Merge matching Ids.
     for pos in range(len(latest)):
@@ -51,7 +56,12 @@ def merge_list(key, master, latest, complain=False):
 
 def merge(master, latest, complain=False):
     for key in latest:
-        if not key in master:
+        # Handle "tags" list separately, as it's always complete and updated.
+        if key == "tags":
+            master[key] = latest[key]
+            continue
+
+        if not master.get(key, None):
             master[key] = latest[key]
         if isinstance(latest[key], dict):
             merge(master[key], latest[key], complain)
@@ -59,7 +69,7 @@ def merge(master, latest, complain=False):
             merge_list(key, master[key], latest[key], complain)
         elif master[key] != latest[key]:
             if complain:
-                print("Mismatch for id %s key %s master:%s latest:%s", query['entryId'], key, master[key], latest[key], file=sys.stderr)
+                print("Mismatch for id %s key %s master:%s latest:%s" % (query['id'], key, master[key], latest[key]), file=sys.stderr)
             else:
                 master[key] = latest[key]
 
@@ -96,7 +106,7 @@ headers = {'user-agent': '''Mozilla/5.0 (Linux; Android 5.1.1; Nexus 5 Build/LMY
 common = { 'deviceModel': 'Nexus 5',
          'devicePlatform': 'Android',
          'deviceVersion': '5.1.1',
-         'version': '2.0.8',
+         'version': '3.7.2',
          'locale': 'en-US',
 }
 
@@ -107,7 +117,13 @@ query['password'] = password
 print("Fetching session ...", file=sys.stderr)
 login = fetch("http://app.elitehrv.com/application/index/login", headers=headers, data=query)
 
+if data.get('entries', None):
+    print("Performing full refresh for v3 protocol update...")
+    os.rename(datafile, '%s.v2' % (datafile))
+    data = dict()
+
 # Refresh dict with latest values.
+#print(json.dumps(login, sort_keys=True, indent=4))
 merge(data, login)
 
 # Install authenticated session.
@@ -115,20 +131,21 @@ common['sessionId'] = data['sessionId']
 
 # Fetch full entry details for each entry.
 count = 0
-for entry in data['entries']:
+for entry in data['readings']:
     count += 1
     # Assume that if we have rrs in the entry, it's already up to date.
-    if 'rrs' in entry:
+    if entry.get('rrs',None):
         continue
 
     query = dict(common)
-    query['entryId'] = entry['entryId']
+    query['id'] = entry['id']
 
-    print("Fetching entry %d ..." % (entry['entryId']), file=sys.stderr)
-    detailed = fetch("http://app.elitehrv.com/application/entry/get", headers=headers, data=query)
+    print("Fetching reading %d ..." % (entry['id']), file=sys.stderr)
+    detailed = fetch("http://app.elitehrv.com/application/reading/get", headers=headers, data=query)
 
+    #print(json.dumps(detailed['reading'], sort_keys=True, indent=4))
     # I would expect only to _add_ the rrs or other missing fields, so complain if not.
-    merge(entry, detailed['entry'], complain=True)
+    merge(entry, detailed['reading'], complain=True)
 
 if datafile:
     output = open("%s.new" % (datafile), "w")
@@ -143,5 +160,6 @@ if datafile:
     old = '%s.old' % (datafile)
     if os.path.exists(old):
         os.unlink(old)
-    os.link(datafile, old)
+    if os.path.exists(datafile):
+        os.link(datafile, old)
     os.rename(new, datafile)
