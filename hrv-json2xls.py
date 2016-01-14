@@ -32,11 +32,12 @@ ws.write(0, col, "Events", style_bold); col += 1
 bp_data = []
 weight_data = []
 row = 1
-for entry in elitehrv['entries']:
+for entry in elitehrv['readings']:
     date = entry['datetime'].split(' ')[0]
     hrv_hr = entry['hr']
     hrv_score = entry['score']
     notes = entry['notes']
+    tags = entry['tags']
 
     # Extract BP and Weight lines from Notes.
     if notes and '\n' in notes:
@@ -57,7 +58,8 @@ for entry in elitehrv['entries']:
     if bp and '@' in bp:
         bp, hr = bp.split('@')
     else:
-        hr = None
+        print("Warning: reading %s missing BP HR" % (date))
+        hr = hrv_hr
 
     if bp and '/' in bp:
         systolic, diastolic = bp.split('/')
@@ -66,7 +68,10 @@ for entry in elitehrv['entries']:
     if not bp:
         continue
 
-    bp_data.append([ date, int(systolic), int(diastolic), int(hr) ])
+    try:
+        bp_data.append([ date, int(systolic), int(diastolic), int(hr) ])
+    except:
+        print(systolic, diastolic, hr)
     if weight:
         weight_data.append([ date, float(weight) ])
 
@@ -88,6 +93,8 @@ for entry in elitehrv['entries']:
     ws.write(row, col, hrv_hr); col += 1
     if date in events:
         ws.write(row, col, events[date]); col += 1
+    elif tags:
+        ws.write(row, col, tags); col += 1
 
     row += 1
 
