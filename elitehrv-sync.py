@@ -67,6 +67,9 @@ def merge(master, latest, complain=False):
             merge(master[key], latest[key], complain)
         elif isinstance(latest[key], list):
             merge_list(key, master[key], latest[key], complain)
+        elif isinstance(master[key], str) and latest[key] == None:
+            # Ignore an update that is null when it was a string.
+            pass
         elif master[key] != latest[key]:
             if complain:
                 print("Mismatch for id %s key %s master:%s latest:%s" % (query['id'], key, master[key], latest[key]), file=sys.stderr)
@@ -94,8 +97,8 @@ if len(sys.argv) > 1:
 if datafile:
     try:
         data = json.load(open(datafile))
-        count = len(data['entries'])
-        print("Loaded %d entr%s." % (count, "y" if count == 1 else "ies"), file=sys.stderr)
+        count = len(data['readings'])
+        print("Loaded %d reading%s." % (count, "" if count == 1 else "s"), file=sys.stderr)
     except FileNotFoundError:
         data = dict()
 else:
@@ -131,16 +134,19 @@ common['sessionId'] = data['sessionId']
 
 # Fetch full entry details for each entry.
 count = 0
+latest = '0'
 for entry in data['readings']:
     count += 1
+    if entry['datetime'] > latest:
+        latest = entry['datetime']
     # Assume that if we have rrs in the entry, it's already up to date.
-    if entry.get('rrs',None):
+    if entry.get('rrs', None) != None:
         continue
 
     query = dict(common)
     query['id'] = entry['id']
 
-    print("Fetching reading %d ..." % (entry['id']), file=sys.stderr)
+    print("Fetching reading %d (%s) ..." % (entry['id'], entry['datetime']), file=sys.stderr)
     detailed = fetch("http://app.elitehrv.com/application/reading/get", headers=headers, data=query)
 
     #print(json.dumps(detailed['reading'], sort_keys=True, indent=4))
@@ -153,7 +159,7 @@ else:
     output = sys.stdout
 
 print(json.dumps(data, sort_keys=True, indent=4), file=output)
-print("Wrote %d entr%s." % (count, "y" if count == 1 else "ies"), file=sys.stderr)
+print("Wrote %d entr%s. (Latest %s)" % (count, "y" if count == 1 else "ies", latest), file=sys.stderr)
 
 if datafile:
     new = '%s.new' % (datafile)

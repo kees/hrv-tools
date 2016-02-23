@@ -8,6 +8,9 @@ style_date = xlwt.easyxf(num_format_str='YYYY-MM-DD')
 wb = xlwt.Workbook()
 ws = wb.add_sheet('Measurements')
 
+# Force US Letter size
+ws.paper_size_code = 1
+
 elitehrv = json.load(open(sys.argv[1]))
 # Load an optional "events.txt" file containing date-indexed line of
 # text to include in the "Events" column:
